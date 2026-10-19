@@ -28,4 +28,5 @@ plot: run
 	python3 scripts/plot_solution.py
 
 clean:
-	rm -rf build output figures
+	rm -rf build output
+	# Keep figures/advection_snapshots.png (tracked for the README).
