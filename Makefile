@@ -4,7 +4,7 @@ CPPFLAGS = -Iinclude
 LDFLAGS  =
 LDLIBS   = -lm
 
-SRC = src/main.c src/params.c src/field.c src/solver.c src/io.c
+SRC = src/main.c src/params.c src/field.c src/solver.c src/io.c src/error.c
 OBJ = $(SRC:src/%.c=build/%.o)
 BIN = build/advection
 

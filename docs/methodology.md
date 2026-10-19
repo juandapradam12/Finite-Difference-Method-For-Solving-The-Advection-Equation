@@ -73,6 +73,25 @@ The scheme is first-order accurate in both space and time and introduces
 numerical diffusion that smooths sharp features as $t$ grows — a known
 trade-off of classical upwinding.
 
+## Error against the exact solution
+
+While the translated pulse remains inside the computational interval,
+the Cauchy solution $u(x,t) = u_0(x - c t)$ is an exact reference.
+At each exported time level the discrete errors
+
+$$
+E_2(t)
+= \sqrt{\Delta x \sum_{i=0}^{N-1}
+\bigl(u_i^{n} - u(x_i,t^{n})\bigr)^{2}},
+\qquad
+E_\infty(t)
+= \max_{0 \le i < N}
+\bigl|u_i^{n} - u(x_i,t^{n})\bigr|
+$$
+
+are written to `output/errors.csv`. Growth of $E_2$ and $E_\infty$ with
+$t$ quantifies the numerical diffusion of the first-order upwind scheme.
+
 ## Implementation notes
 
 The solver keeps only two solution buffers (current / next), advances

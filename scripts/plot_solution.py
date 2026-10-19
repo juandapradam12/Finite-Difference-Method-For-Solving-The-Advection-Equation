@@ -1,24 +1,35 @@
 #!/usr/bin/env python3
-"""Plot selected snapshots from the 1D advection solver."""
+"""Plot solver snapshots, exact reference, and error norms."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "output"
 FIGURES = ROOT / "figures"
 
-# Snapshots produced by the default demo configuration.
+# Default demo parameters (must match params_default in C).
+C = 1.0
+DT = 1e-3
 SNAPSHOTS = [
     (0, r"$t = 0$"),
     (350, r"$t = 350\,\Delta t$"),
     (600, r"$t = 600\,\Delta t$"),
     (700, r"$t = 700\,\Delta t$"),
 ]
+
+
+def exact_pulse(x: np.ndarray, t: float, c: float = C) -> np.ndarray:
+    xi = x - c * t
+    u = np.zeros_like(x)
+    mask = np.abs(xi) <= 0.5
+    u[mask] = 0.25 - xi[mask] ** 2
+    return u
 
 
 def load_snapshot(step: int) -> pd.DataFrame:
@@ -28,25 +39,64 @@ def load_snapshot(step: int) -> pd.DataFrame:
     return pd.read_csv(path)
 
 
-def main() -> None:
-    FIGURES.mkdir(parents=True, exist_ok=True)
-
+def plot_snapshots() -> Path:
     fig, ax = plt.subplots(figsize=(8.5, 4.5), constrained_layout=True)
 
     for step, label in SNAPSHOTS:
         df = load_snapshot(step)
         ax.plot(df["x"], df["u"], label=label, linewidth=1.8)
 
+    # Exact reference at the final snapshot time.
+    final_step, _ = SNAPSHOTS[-1]
+    x = load_snapshot(final_step)["x"].to_numpy()
+    t_final = final_step * DT
+    ax.plot(
+        x,
+        exact_pulse(x, t_final),
+        color="0.25",
+        linestyle="--",
+        linewidth=1.4,
+        label=rf"exact at $t = {final_step}\,\Delta t$",
+    )
+
     ax.set_xlabel(r"$x$")
     ax.set_ylabel(r"$u(x,t)$")
     ax.set_title("1D advection — first-order upwind FDM")
-    ax.legend(frameon=False)
+    ax.legend(frameon=False, fontsize=9)
     ax.set_xlim(-2.0, 2.0)
     ax.axhline(0.0, color="0.7", linewidth=0.8)
 
     out = FIGURES / "advection_snapshots.png"
     fig.savefig(out, dpi=160)
     print(f"Saved {out}")
+    return out
+
+
+def plot_errors() -> Path:
+    path = OUTPUT / "errors.csv"
+    if not path.exists():
+        raise FileNotFoundError(f"Missing error report: {path}")
+    err = pd.read_csv(path)
+
+    fig, ax = plt.subplots(figsize=(8.0, 4.2), constrained_layout=True)
+    ax.plot(err["t"], err["L2"], marker="o", label=r"$E_2$")
+    ax.plot(err["t"], err["Linf"], marker="s", label=r"$E_\infty$")
+    ax.set_xlabel(r"$t$")
+    ax.set_ylabel("error")
+    ax.set_title("Error vs exact solution $u_0(x - c t)$")
+    ax.legend(frameon=False)
+    ax.set_xlim(left=0.0)
+
+    out = FIGURES / "error_norms.png"
+    fig.savefig(out, dpi=160)
+    print(f"Saved {out}")
+    return out
+
+
+def main() -> None:
+    FIGURES.mkdir(parents=True, exist_ok=True)
+    plot_snapshots()
+    plot_errors()
 
 
 if __name__ == "__main__":
