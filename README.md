@@ -1,4 +1,4 @@
-# Finite-Difference Advection Solver
+# Advection Equation Modeling
 
 A compact **C11** case study: solve the 1D linear advection equation with a
 first-order upwind finite-difference scheme, measure error against the exact
