@@ -24,8 +24,8 @@ The demo uses a compact parabolic pulse
 $$
 u_0(x) =
 \begin{cases}
-\dfrac{1}{4} - x^{2}, & \lvert x\rvert \le \dfrac{1}{2}, \\[0.6em]
-0, & \text{otherwise},
+\frac{1}{4} - x^{2}, & \lvert x\rvert \le \frac{1}{2}, \\
+0, & \text{otherwise}.
 \end{cases}
 $$
 
@@ -76,13 +76,9 @@ the Cauchy solution $u(x,t) = u_0(x - c t)$ is an exact reference.
 At each exported time level the discrete errors
 
 $$
-E_2(t)
-= \sqrt{\Delta x \sum_{i=0}^{N-1}
-\bigl(u_i^{n} - u(x_i,t^{n})\bigr)^{2}},
+E_2(t) = \sqrt{\Delta x \sum_{i=0}^{N-1}\bigl(u_i^{n} - u(x_i,t^{n})\bigr)^{2}},
 \qquad
-E_{\infty}(t)
-= \max_{0 \le i < N}
-\lvert u_i^{n} - u(x_i,t^{n})\rvert
+E_{\infty}(t) = \max_{0 \le i < N}\lvert u_i^{n} - u(x_i,t^{n})\rvert
 $$
 
 are written to `output/errors.csv`. Growth of $E_2$ and $E_{\infty}$ with
@@ -96,9 +92,8 @@ compared at a common final time $T$ (here $T \approx 0.5$). Between
 successive resolutions the experimental rate is
 
 $$
-p
-= \frac{\log\!\bigl(E(h_{\mathrm{coarse}}) / E(h_{\mathrm{fine}})\bigr)}
-       {\log\!\bigl(h_{\mathrm{coarse}} / h_{\mathrm{fine}}\bigr)}.
+p = \frac{\log\!\bigl(E(h_{\mathrm{coarse}}) / E(h_{\mathrm{fine}})\bigr)}
+{\log\!\bigl(h_{\mathrm{coarse}} / h_{\mathrm{fine}}\bigr)}.
 $$
 
 For a smooth solution the first-order upwind scheme yields $p \approx 1$.
