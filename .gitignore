@@ -1,0 +1,23 @@
+# Build artifacts
+build/
+*.o
+*.x
+*.out
+
+# Generated solver output (figures/advection_snapshots.png is tracked for the README)
+output/
+*.dat
+*.csv
+!docs/**
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editor / OS
+.DS_Store
+*.swp
+.idea/
+.vscode/
