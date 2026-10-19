@@ -92,6 +92,26 @@ $$
 are written to `output/errors.csv`. Growth of $E_2$ and $E_\infty$ with
 $t$ quantifies the numerical diffusion of the first-order upwind scheme.
 
+## Grid convergence
+
+To measure the observed order of accuracy, the mesh is refined at
+**fixed CFL** $\alpha$, so that $\Delta t \propto \Delta x$. Errors are
+compared at a common final time $T$ (here $T \approx 0.5$). Between
+successive resolutions the experimental rate is
+
+$$
+p
+= \frac{\log\!\bigl(E(h_{\text{coarse}}) / E(h_{\text{fine}})\bigr)}
+       {\log\!\bigl(h_{\text{coarse}} / h_{\text{fine}}\bigr)}.
+$$
+
+For a smooth solution the first-order upwind scheme yields $p \approx 1$.
+The compact parabolic pulse used here is only $C^0$ (kinks at
+$|x| = 1/2$), so the observed $E_2$ rate settles near $p \approx 0.75$
+and $E_\infty$ converges more slowly — still consistent with a stable
+first-order method on limited-regularity data. The driver
+`build/convergence` writes the study to `output/convergence.csv`.
+
 ## Implementation notes
 
 The solver keeps only two solution buffers (current / next), advances

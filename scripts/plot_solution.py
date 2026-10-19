@@ -93,10 +93,39 @@ def plot_errors() -> Path:
     return out
 
 
+def plot_convergence() -> Path:
+    path = OUTPUT / "convergence.csv"
+    if not path.exists():
+        raise FileNotFoundError(f"Missing convergence report: {path}")
+    conv = pd.read_csv(path)
+
+    fig, ax = plt.subplots(figsize=(8.0, 4.5), constrained_layout=True)
+    ax.loglog(conv["dx"], conv["L2"], "o-", label=r"$E_2$", linewidth=1.8)
+    ax.loglog(conv["dx"], conv["Linf"], "s-", label=r"$E_\infty$", linewidth=1.8)
+
+    # Reference slope-1 line anchored at the coarsest E_2.
+    dx_ref = conv["dx"].to_numpy()
+    e_ref = conv["L2"].to_numpy()
+    ref = e_ref[0] * (dx_ref / dx_ref[0])
+    ax.loglog(dx_ref, ref, "--", color="0.4", label=r"$O(\Delta x)$")
+
+    ax.set_xlabel(r"$\Delta x$")
+    ax.set_ylabel("error at fixed $T$")
+    ax.set_title(r"Grid convergence at fixed CFL ($\alpha = 0.25$)")
+    ax.legend(frameon=False)
+    ax.invert_xaxis()
+
+    out = FIGURES / "convergence.png"
+    fig.savefig(out, dpi=160)
+    print(f"Saved {out}")
+    return out
+
+
 def main() -> None:
     FIGURES.mkdir(parents=True, exist_ok=True)
     plot_snapshots()
     plot_errors()
+    plot_convergence()
 
 
 if __name__ == "__main__":

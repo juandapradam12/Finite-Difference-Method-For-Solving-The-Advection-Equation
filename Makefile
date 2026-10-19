@@ -4,19 +4,24 @@ CPPFLAGS = -Iinclude
 LDFLAGS  =
 LDLIBS   = -lm
 
-SRC = src/main.c src/params.c src/field.c src/solver.c src/io.c src/error.c
-OBJ = $(SRC:src/%.c=build/%.o)
-BIN = build/advection
+LIB_SRC = src/params.c src/field.c src/solver.c src/io.c src/error.c
+LIB_OBJ = $(LIB_SRC:src/%.c=build/%.o)
 
-.PHONY: all run plot clean dirs
+BIN      = build/advection
+CONV_BIN = build/convergence
 
-all: $(BIN)
+.PHONY: all run convergence plot study clean dirs
+
+all: $(BIN) $(CONV_BIN)
 
 dirs:
 	@mkdir -p build output figures
 
-$(BIN): $(OBJ) | dirs
-	$(CC) $(CFLAGS) $(OBJ) -o $@ $(LDFLAGS) $(LDLIBS)
+$(BIN): build/main.o $(LIB_OBJ) | dirs
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LDLIBS)
+
+$(CONV_BIN): build/convergence.o build/params.o build/field.o build/solver.o build/error.o | dirs
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LDLIBS)
 
 build/%.o: src/%.c | dirs
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
@@ -24,9 +29,14 @@ build/%.o: src/%.c | dirs
 run: $(BIN)
 	./$(BIN)
 
-plot: run
+convergence: $(CONV_BIN)
+	./$(CONV_BIN)
+
+plot: run convergence
 	python3 scripts/plot_solution.py
+
+study: plot
 
 clean:
 	rm -rf build output
-	# Keep figures/advection_snapshots.png (tracked for the README).
+	# Keep tracked figures under figures/ for the README.

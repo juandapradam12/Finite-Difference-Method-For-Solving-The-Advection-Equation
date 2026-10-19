@@ -1,100 +1,75 @@
 # Finite-Difference Advection Solver
 
-A compact C implementation of the **first-order upwind finite-difference method**
-for the one-dimensional linear advection equation — a standard prototype in
-computational fluid dynamics and hyperbolic PDE numerics.
-
-This repository is a portfolio case study: clean module boundaries, a
-CFL-aware parameter layer, error norms against the exact solution,
-reproducible build/plot targets, and a short mathematical write-up of the
-scheme.
+A compact **C11** case study: solve the 1D linear advection equation with a
+first-order upwind finite-difference scheme, measure error against the exact
+solution, and verify the expected convergence rate.
 
 ---
 
-## Problem
+## The equation
 
-Transport of a scalar field $u(x,t)$ at constant speed $c$:
+A scalar field $u(x,t)$ is transported at constant speed $c$:
 
 $$
 \frac{\partial u}{\partial t} + c \frac{\partial u}{\partial x} = 0.
 $$
 
-Exact solution: $u(x,t) = u_0(x - c t)$. Numerically, we discretise the PDE
-with an explicit upwind stencil and track a compact parabolic pulse as it
-advects across a finite interval.
+The exact Cauchy solution is a pure translation of the initial data,
 
-Full derivation, stability condition, error norms, and initial/boundary data:
-[docs/methodology.md](docs/methodology.md).
+$$
+u(x,t) = u_0(x - c t).
+$$
+
+Here $u_0$ is a compact parabolic pulse on $[-2, 2]$; the numerical method
+must carry that pulse to the right without blowing up. Full derivation,
+stability condition, and norms: [docs/methodology.md](docs/methodology.md).
 
 ---
 
-## Method (at a glance)
+## The scheme
+
+First-order upwind ($c > 0$), with Courant number $\alpha = c\,\Delta t / \Delta x$:
 
 $$
 u_i^{n+1}
 = u_i^{n}
 - \alpha \bigl(u_i^{n} - u_{i-1}^{n}\bigr),
-\qquad
-\alpha = \frac{c\,\Delta t}{\Delta x},\quad
-0 < \alpha \le 1.
+\qquad 0 < \alpha \le 1.
 $$
 
 | Choice | Detail |
 | --- | --- |
-| Scheme | First-order upwind (forward Euler + backward difference) |
-| Domain | $x \in [-2, 2]$, $N = 1000$ nodes |
-| Time | $\Delta t = 10^{-3}$, $700$ steps |
+| Domain | $x \in [-2, 2]$, default $N = 1000$ |
+| Time | $\Delta t = 10^{-3}$, $700$ steps (demo) |
 | IC | $u_0(x) = 1/4 - x^{2}$ for $|x| \le 1/2$, else $0$ |
 | BC | Homogeneous Dirichlet |
-| Metrics | Discrete $E_2$ and $E_\infty$ vs $u_0(x - c t)$ |
+| CFL | $\alpha \approx 0.25$ |
 
 ---
 
-## Architecture
+## Story of a pulse
 
-```
-include/          Public headers (params, field, solver, io, error)
-src/              Implementation + thin driver (main.c)
-scripts/          Snapshot and error plotting
-docs/             Mathematical methodology
-output/           CSV snapshots + errors.csv (generated)
-figures/          Plots (generated)
-.github/          CI workflow
-```
+At $t = 0$ the pulse sits at the origin. As the scheme advances, the profile
+moves right — and **broadens**. That smoothing is numerical diffusion, the
+signature trade-off of classical first-order upwinding. The dashed curve is
+the exact translation at the final time: same centre of mass, taller peak,
+sharper edges.
 
-| Module | Responsibility |
-| --- | --- |
-| `params` | Physical/numerical configuration, $\Delta x$, CFL validation |
-| `field` | Grid, rolling solution buffers, initial pulse |
-| `solver` | Single-step upwind update and time loop |
-| `error` | Exact pulse reference, $E_2$ / $E_\infty$ norms |
-| `io` | CSV snapshot export |
-| `main` | Glue: validate → initialise → integrate → report |
-
-Only two time levels are stored in memory; selected frames are exported for
-analysis rather than retaining the full space–time array.
+![Pulse advection at successive time levels](figures/advection_snapshots.png)
 
 ---
 
-## Build & run
+## Error grows in time
 
-```bash
-make run          # compile, integrate, write CSV + error report
-pip install -r requirements.txt
-make plot         # run solver + save figures/
-```
+Against $u_0(x - c t)$, discrete norms
 
-Requires a C11 compiler (`gcc`/`clang`) and Python 3 with
-`matplotlib` / `pandas` / `numpy`.
+$$
+E_2 = \sqrt{\Delta x \sum_i (u_i - u^{\mathrm{ex}}_i)^2},
+\qquad
+E_\infty = \max_i |u_i - u^{\mathrm{ex}}_i|
+$$
 
----
-
-## Results
-
-The pulse translates to the right while numerical diffusion from the
-first-order upwind scheme gradually flattens the profile. Against the
-exact translation $u_0(x - c t)$, both $E_2$ and $E_\infty$ grow with
-time (CFL $\approx 0.25$):
+start at machine zero and rise as diffusion eats the peak:
 
 | Step | $t$ | $E_2$ | $E_\infty$ |
 | --- | --- | --- | --- |
@@ -103,15 +78,72 @@ time (CFL $\approx 0.25$):
 | 600 | 0.60 | $4.09 \times 10^{-3}$ | $1.56 \times 10^{-2}$ |
 | 700 | 0.70 | $4.59 \times 10^{-3}$ | $1.68 \times 10^{-2}$ |
 
-![Advection snapshots](figures/advection_snapshots.png)
+![Error norms versus time](figures/error_norms.png)
 
-![Error norms](figures/error_norms.png)
+---
+
+## Refining the grid
+
+Holding CFL fixed ($\alpha = 0.25$) so $\Delta t \propto \Delta x$, and
+measuring error at $T \approx 0.5$, successive dyadic refinements give an
+observed $E_2$ rate $p \approx 0.75$ — first-order behaviour limited by the
+pulse’s kink at the support edges ($u_0$ is $C^0$ but not $C^1$). $E_\infty$
+converges more slowly, as expected for that limited regularity. The dashed
+reference is the ideal $O(\Delta x)$ slope.
+
+![Grid convergence at fixed CFL](figures/convergence.png)
+
+| $N$ | $\Delta x$ | $E_2$ | rate $E_2$ |
+| --- | --- | --- | --- |
+| 125 | $3.23 \times 10^{-2}$ | $1.72 \times 10^{-2}$ | — |
+| 250 | $1.61 \times 10^{-2}$ | $1.01 \times 10^{-2}$ | $0.77$ |
+| 500 | $8.02 \times 10^{-3}$ | $5.99 \times 10^{-3}$ | $0.75$ |
+| 1000 | $4.00 \times 10^{-3}$ | $3.57 \times 10^{-3}$ | $0.74$ |
+| 2000 | $2.00 \times 10^{-3}$ | $2.13 \times 10^{-3}$ | $0.75$ |
+
+---
+
+## Architecture
+
+```
+include/     params · field · solver · error · io
+src/         library + drivers (main, convergence)
+scripts/     storytelling plots
+docs/        methodology with LaTeX
+figures/     tracked plots for this README
+.github/     CI: build, demo, convergence rates
+```
+
+| Module | Role |
+| --- | --- |
+| `params` | Configuration, $\Delta x$, CFL validation |
+| `field` | Grid + rolling solution buffers |
+| `solver` | Upwind step and time loop |
+| `error` | Exact pulse, $E_2$ / $E_\infty$ |
+| `io` | CSV snapshots |
+| `main` / `convergence` | Demo run and fixed-CFL refinement study |
+
+Only two time levels live in memory; selected frames and the convergence
+table are exported for analysis.
+
+---
+
+## Build & run
+
+```bash
+make study        # demo + convergence + all figures
+# or step by step:
+make run          # output/u_tXXXX.csv, output/errors.csv
+make convergence  # output/convergence.csv
+pip install -r requirements.txt
+make plot
+```
+
+Requires a C11 compiler and Python 3 with `matplotlib` / `numpy` / `pandas`.
 
 ---
 
 ## Stack
 
-- **C11** — numerical core
-- **Make** — build orchestration
-- **Python** — post-processing only
-- **GitHub Actions** — build + smoke check on every push
+**C11** numerical core · **Make** orchestration · **Python** plots only ·
+**GitHub Actions** build + error/convergence smoke checks
