@@ -24,7 +24,7 @@ The demo uses a compact parabolic pulse
 $$
 u_0(x) =
 \begin{cases}
-\dfrac{1}{4} - x^{2}, & |x| \le \dfrac{1}{2}, \\[0.6em]
+\dfrac{1}{4} - x^{2}, & \lvert x\rvert \le \dfrac{1}{2}, \\[0.6em]
 0, & \text{otherwise},
 \end{cases}
 $$
@@ -48,18 +48,14 @@ A backward difference in space (consistent with $c > 0$) and a forward
 Euler step in time yield
 
 $$
-\frac{u_i^{n+1} - u_i^{n}}{\Delta t}
-+ c\,\frac{u_i^{n} - u_{i-1}^{n}}{\Delta x} = 0,
+\frac{u_i^{n+1} - u_i^{n}}{\Delta t} + c\,\frac{u_i^{n} - u_{i-1}^{n}}{\Delta x} = 0,
 $$
 
 or equivalently
 
 $$
-u_i^{n+1}
-= u_i^{n}
-- \alpha \bigl(u_i^{n} - u_{i-1}^{n}\bigr),
-\qquad
-\alpha = \frac{c\,\Delta t}{\Delta x}.
+u_i^{n+1} = u_i^{n} - \alpha\bigl(u_i^{n} - u_{i-1}^{n}\bigr),
+\qquad \alpha = \frac{c\,\Delta t}{\Delta x}.
 $$
 
 The dimensionless factor $\alpha$ is the Courant–Friedrichs–Lewy (CFL)
@@ -84,12 +80,12 @@ E_2(t)
 = \sqrt{\Delta x \sum_{i=0}^{N-1}
 \bigl(u_i^{n} - u(x_i,t^{n})\bigr)^{2}},
 \qquad
-E_\infty(t)
+E_{\infty}(t)
 = \max_{0 \le i < N}
-\bigl|u_i^{n} - u(x_i,t^{n})\bigr|
+\lvert u_i^{n} - u(x_i,t^{n})\rvert
 $$
 
-are written to `output/errors.csv`. Growth of $E_2$ and $E_\infty$ with
+are written to `output/errors.csv`. Growth of $E_2$ and $E_{\infty}$ with
 $t$ quantifies the numerical diffusion of the first-order upwind scheme.
 
 ## Grid convergence
@@ -101,15 +97,15 @@ successive resolutions the experimental rate is
 
 $$
 p
-= \frac{\log\!\bigl(E(h_{\text{coarse}}) / E(h_{\text{fine}})\bigr)}
-       {\log\!\bigl(h_{\text{coarse}} / h_{\text{fine}}\bigr)}.
+= \frac{\log\!\bigl(E(h_{\mathrm{coarse}}) / E(h_{\mathrm{fine}})\bigr)}
+       {\log\!\bigl(h_{\mathrm{coarse}} / h_{\mathrm{fine}}\bigr)}.
 $$
 
 For a smooth solution the first-order upwind scheme yields $p \approx 1$.
-The compact parabolic pulse used here is only $C^0$ (kinks at
-$|x| = 1/2$), so the observed $E_2$ rate settles near $p \approx 0.75$
-and $E_\infty$ converges more slowly — still consistent with a stable
-first-order method on limited-regularity data. The driver
+The compact parabolic pulse used here is only $C^{0}$ (kinks at
+$\lvert x\rvert = 1/2$), so the observed $E_2$ rate settles near
+$p \approx 0.75$ and $E_{\infty}$ converges more slowly — still consistent
+with a stable first-order method on limited-regularity data. The driver
 `build/convergence` writes the study to `output/convergence.csv`.
 
 ## Implementation notes
